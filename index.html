@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình Xem Đề Trắc Nghiệm - Ẩn/Hiện Đáp Án</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS CỐT LÕI: Ghi đè các định dạng highlight của MS Word */
+        
+        /* 1. XÓA VĨNH VIỄN màu nền/màu chữ đáp án gốc của MS Word (để tránh vệt vàng bị lem như trong ảnh) */
+        #word-content [style*="background:yellow"],
+        #word-content [style*="background: yellow"],
+        #word-content [style*="background-color:yellow"],
+        #word-content [style*="background-color: yellow"],
+        #word-content [style*="mso-highlight:yellow"],
+        #word-content [style*="mso-highlight: yellow"] {
+            background: transparent !important;
+            background-color: transparent !important;
+        }
+
+        #word-content [style*="color:red"],
+        #word-content [style*="color: red"],
+        #word-content [style*="color:#FF0000"],
+        #word-content [style*="color: #FF0000"],
+        #word-content font[color="red"],
+        #word-content font[color="#ff0000"] {
+            color: inherit !important;
+        }
+
+        /* Khung bọc nội dung file Word để tránh vỡ giao diện */
+        #word-content {
+            background: white;
+            color: black;
+            padding: 2.5rem;
+            min-height: 60vh;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Tùy chỉnh khi bấm nút In (Ctrl+P) */
+        @media print {
+            body {
+                background: white !important;
+            }
+            #header, #controls, #upload-area, #stats-panel {
+                display: none !important; /* Ẩn các nút điều khiển và thống kê khi in */
+            }
+            #word-content {
+                box-shadow: none !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+        }
+
+        /* --- TÍNH NĂNG MỚI: GIAO DIỆN LỰA CHỌN TRẮC NGHIỆM TÙY CHỈNH --- */
+        .clickable-option {
+            cursor: pointer;
+            border-radius: 8px; /* Bo góc mềm mại */
+            transition: all 0.2s ease-in-out;
+            background-color: #f8fafc; /* Màu nền xám nhạt mặc định */
+            border: 2px solid #f1f5f9;
+            position: relative;
+        }
+        .clickable-option:hover {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+        
+        /* Hiệu ứng khi học sinh nhấp chọn (màu xanh lam) */
+        .user-selected {
+            background-color: #e0f2fe !important;
+            border-color: #38bdf8 !important;
+            box-shadow: inset 0 0 0 1px #38bdf8;
+        }
+        .user-selected, .user-selected span, .user-selected font {
+            color: #0369a1 !important; 
+            font-weight: bold !important;
+        }
+
+        /* HIỆU ỨNG THAY THẾ WORD: Tự động highlight khi giáo viên bấm "Hiện Đáp Án" */
+        .show-correct .word-split-option[data-is-correct="true"] {
+            background-color: #fef08a !important; /* Màu nền vàng nổi bật toàn khối */
+            border-color: #facc15 !important;     /* Viền vàng */
+            color: #854d0e !important;            /* Chữ màu nâu vàng dễ đọc */
+            font-weight: 600 !important;
+            box-shadow: 0 4px 6px -1px rgba(250, 204, 21, 0.2);
+        }
+        /* Ép các chữ bên trong khối đáp án đúng đổi màu theo */
+        .show-correct .word-split-option[data-is-correct="true"] span,
+        .show-correct .word-split-option[data-is-correct="true"] font {
+            color: #854d0e !important; 
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 selection:bg-blue-200">
+
+    <div id="header" class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800">Công Cụ Trình Chiếu Đề Thi</h1>
+                    <p id="interactive-hint" class="text-sm text-blue-600 hidden font-medium mt-1">💡 Mẹo: Nhấp chuột vào các đáp án để đánh dấu chọn.</p>
+                </div>
+            </div>
+            
+            <div id="controls" class="hidden flex items-center gap-3">
+                
+                <div id="stats-panel" class="hidden flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 mr-2 shadow-inner">
+                    <div class="text-sm font-semibold text-slate-600 flex flex-col items-center">
+                        <span class="text-xs text-slate-400 uppercase">Đã chọn</span>
+                        <div><span id="stat-answered" class="text-blue-600 text-lg font-bold">0</span>/<span id="stat-total" class="text-slate-500">0</span></div>
+                    </div>
+                    
+                    <div id="score-result" class="hidden items-center gap-4">
+                        <div class="w-px h-8 bg-slate-200"></div>
+                        <div class="text-sm font-semibold text-slate-600 flex flex-col items-center">
+                            <span class="text-xs text-slate-400 uppercase">Làm đúng</span>
+                            <div><span id="stat-correct" class="text-green-600 text-lg font-bold">0</span>/<span id="stat-answered-sub" class="text-slate-500">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="score-btn" class="flex items-center gap-2 bg-green-100 text-green-700 hover:bg-green-200 px-4 py-2 rounded-lg font-semibold transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>Chấm Điểm</span>
+                </button>
+                <button id="toggle-btn" class="flex items-center gap-2 bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg font-semibold transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>Hiện Đáp Án</span>
+                </button>
+                <button id="print-btn" class="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-700 px-4 py-2 rounded-lg font-semibold transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                    <span>In Đề (PDF)</span>
+                </button>
+                <button id="reload-btn" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors" title="Tải file khác">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        
+        <div id="upload-area" class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+            <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Chọn file đề (.htm)</h2>
+            <p class="text-slate-500 mb-6">Trang web sẽ tự động xử lý khoảng trắng, định dạng lại đề y như một ứng dụng thi trắc nghiệm hiện đại.</p>
+            
+            <label class="relative inline-flex items-center justify-center cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg">
+                <span>Chọn File Từ Máy Tính</span>
+                <input type="file" id="file-upload" accept=".htm, .html" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+            </label>
+        </div>
+
+        <div id="viewer-area" class="hidden">
+            <div id="word-content"></div>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            // CHÚ Ý: Sử dụng windows-1258 để khắc phục lỗi font tiếng Việt từ Word
+            reader.onload = function(e) {
+                const htmlContent = e.target.result;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+
+                const oldStyles = document.querySelectorAll('.word-injected-style');
+                oldStyles.forEach(s => s.remove());
+
+                const styles = doc.querySelectorAll('style');
+                styles.forEach(style => {
+                    const newStyle = document.createElement('style');
+                    newStyle.textContent = style.textContent;
+                    newStyle.className = 'word-injected-style';
+                    document.head.appendChild(newStyle);
+                });
+
+                const contentDiv = document.getElementById('word-content');
+                contentDiv.innerHTML = doc.body.innerHTML;
+
+                // =========================================================================
+                // BƯỚC 1: TIỀN XỬ LÝ - DỌN RÁC CỦA WORD VÀ CHỈNH LẠI FORM (ÉP RỚT DÒNG)
+                // =========================================================================
+
+                // 1.0 Xóa sạch các tab ẩn (mso-tab-count)
+                contentDiv.querySelectorAll('span[style*="mso-tab-count"]').forEach(el => el.remove());
+                contentDiv.querySelectorAll('o\\:p').forEach(el => el.remove());
+
+                // 1.0.1 NÂNG CẤP: Gỡ bỏ các thẻ span rác để tránh việc đáp án bị giam lỏng bên trong nhau
+                contentDiv.querySelectorAll('span').forEach(span => {
+                    const styleStr = span.getAttribute('style') || '';
+                    const isImportant = /background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(styleStr) || /color\s*:\s*(red|#FF0000)/i.test(styleStr);
+                    // Nếu thẻ span không có định dạng đáp án đúng, phá vỡ nó để lấy text bên trong ra ngoài
+                    if (!isImportant) {
+                        span.outerHTML = span.innerHTML; 
+                    }
+                });
+
+                const blocks = contentDiv.querySelectorAll('p, div, li, td');
+                blocks.forEach(block => {
+                    if (block.querySelector('p, div, ul, ol, table')) return;
+
+                    // 1.1 Tìm và cắt các text chứa đáp án bị dính liền
+                    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
+                    const nodesToProcess = [];
+                    while(walker.nextNode()) nodesToProcess.push(walker.currentNode);
+
+                    nodesToProcess.forEach(node => {
+                        const text = node.nodeValue;
+                        const regex = /([A-D][\.\/\)](?:\s+|\u00A0+))/g;
+                        let match;
+                        let indices = [];
+                        while ((match = regex.exec(text)) !== null) {
+                            let prevChar = match.index > 0 ? text[match.index - 1] : '';
+                            if (!/[A-Z]/.test(prevChar)) {
+                                indices.push(match.index);
+                            }
+                        }
+                        if (indices.length > 0) {
+                            indices.reverse().forEach(index => {
+                                if (index > 0) node.splitText(index);
+                            });
+                        }
+                    });
+
+                    // 1.2 Bọc các đáp án đã cắt, ép rớt xuống dòng
+                    const children = Array.from(block.childNodes);
+                    let currentWrapper = null;
+
+                    children.forEach(node => {
+                        let text = node.textContent || "";
+                        const isOptionStart = /^\s*[A-D][\.\/\)](?:\s+|\u00A0+)/.test(text);
+
+                        if (isOptionStart) {
+                            // NÂNG CẤP: Dùng thẻ <div> thay vì <span> để ép buộc rớt khối 100%
+                            currentWrapper = document.createElement('div');
+                            currentWrapper.className = 'word-split-option clickable-option w-full px-4 py-2.5 my-1.5';
+                            block.insertBefore(currentWrapper, node);
+                        }
+
+                        if (currentWrapper) {
+                            if (node.nodeType === Node.TEXT_NODE && currentWrapper.childNodes.length === 0) {
+                                node.nodeValue = node.nodeValue.trimStart();
+                                if (node.nodeValue === '') return; 
+                            }
+                            currentWrapper.appendChild(node);
+                        }
+                    });
+                });
+
+                // =========================================================================
+                // BƯỚC 2: CHUYỂN THÀNH GIAO DIỆN WEB TƯƠNG TÁC
+                // =========================================================================
+                let currentQuestionId = 0;
+                let totalQuestions = 0;
+
+                function checkIsCorrect(node) {
+                    if (/background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(node.innerHTML) || /color\s*:\s*(red|#FF0000)/i.test(node.innerHTML)) return true;
+                    let parent = node.parentElement;
+                    while (parent && parent !== contentDiv) {
+                        const styleStr = parent.getAttribute('style') || '';
+                        if (/background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(styleStr) || /color\s*:\s*(red|#FF0000)/i.test(styleStr)) return true;
+                        parent = parent.parentElement;
+                    }
+                    return false;
+                }
+
+                const optionElements = contentDiv.querySelectorAll('.word-split-option');
+                
+                optionElements.forEach(el => {
+                    const text = el.textContent.trim();
+                    const isOptionA = /^\s*A[\.\/\)]\s*/.test(text) || /^\s*A\s/.test(text);
+                    if (isOptionA) currentQuestionId++;
+                    if (currentQuestionId === 0) currentQuestionId = 1;
+
+                    el.dataset.qId = currentQuestionId;
+                    
+                    el.querySelectorAll('p').forEach(p => { p.style.margin = '0'; p.style.padding = '0'; });
+
+                    if (checkIsCorrect(el)) {
+                        el.dataset.isCorrect = "true";
+                    }
+                    
+                    el.addEventListener('click', function(e) {
+                        e.stopPropagation();
+
+                        const siblings = contentDiv.querySelectorAll(`.word-split-option[data-q-id="${this.dataset.qId}"]`);
+                        const wasSelected = this.classList.contains('user-selected');
+                        
+                        siblings.forEach(sib => sib.classList.remove('user-selected'));
+                        
+                        if (!wasSelected) {
+                            this.classList.add('user-selected');
+                        }
+                        updateStats();
+                    });
+                });
+
+                totalQuestions = currentQuestionId;
+                document.getElementById('stat-total').textContent = totalQuestions;
+
+                document.getElementById('interactive-hint').classList.remove('hidden');
+                document.getElementById('upload-area').classList.add('hidden');
+                document.getElementById('viewer-area').classList.remove('hidden');
+                document.getElementById('controls').classList.remove('hidden');
+                document.getElementById('controls').classList.add('flex');
+                document.getElementById('stats-panel').classList.remove('hidden');
+            };
+            
+            // Đọc file bằng windows-1258
+            reader.readAsText(file, 'windows-1258');
+        });
+
+        function updateStats() {
+            const selectedOptions = document.querySelectorAll('.user-selected');
+            const answeredCount = selectedOptions.length;
+            
+            document.getElementById('stat-answered').textContent = answeredCount;
+            document.getElementById('score-result').classList.add('hidden');
+            document.getElementById('score-result').classList.remove('flex');
+        }
+
+        document.getElementById('score-btn').addEventListener('click', function() {
+            const selectedOptions = document.querySelectorAll('.user-selected');
+            if (selectedOptions.length === 0) {
+                alert("Bạn chưa làm câu nào. Hãy chọn đáp án trước khi chấm điểm nhé!");
+                return;
+            }
+
+            let correctCount = 0;
+            selectedOptions.forEach(opt => {
+                if (opt.dataset.isCorrect === "true") correctCount++;
+            });
+
+            document.getElementById('stat-answered-sub').textContent = selectedOptions.length;
+            document.getElementById('stat-correct').textContent = correctCount;
+            
+            const scoreResult = document.getElementById('score-result');
+            scoreResult.classList.remove('hidden');
+            scoreResult.classList.add('flex');
+        });
+
+        let isAnswersHidden = true;
+        document.getElementById('toggle-btn').addEventListener('click', function() {
+            const contentDiv = document.getElementById('word-content');
+            const btnSpan = this.querySelector('span');
+            
+            isAnswersHidden = !isAnswersHidden;
+            
+            if (isAnswersHidden) {
+                contentDiv.classList.remove('show-correct');
+                btnSpan.textContent = 'Hiện Đáp Án';
+                this.className = 'flex items-center gap-2 bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg font-semibold transition-colors';
+            } else {
+                contentDiv.classList.add('show-correct');
+                btnSpan.textContent = 'Ẩn Đáp Án';
+                this.className = 'flex items-center gap-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-4 py-2 rounded-lg font-semibold transition-colors';
+            }
+        });
+
+        document.getElementById('print-btn').addEventListener('click', function() {
+            window.print();
+        });
+
+        document.getElementById('reload-btn').addEventListener('click', function() {
+            window.location.reload();
+        });
+    </script>
+</body>
+</html>
