@@ -3,86 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình Xem Đề Trắc Nghiệm - Ẩn/Hiện Đáp Án</title>
+    <title>Hệ Thống Trắc Nghiệm Trực Tuyến</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style id="core-css">
-        /* CSS CỐT LÕI: Ghi đè các định dạng highlight của MS Word */
-        
         /* 1. XÓA VĨNH VIỄN màu nền/màu chữ đáp án gốc của MS Word */
-        #word-content [style*="background:yellow"],
-        #word-content [style*="background: yellow"],
-        #word-content [style*="background-color:yellow"],
-        #word-content [style*="background-color: yellow"],
-        #word-content [style*="mso-highlight:yellow"],
-        #word-content [style*="mso-highlight: yellow"] {
-            background: transparent !important;
-            background-color: transparent !important;
+        #word-content [style*="background:yellow"], #word-content [style*="background: yellow"],
+        #word-content [style*="background-color:yellow"], #word-content [style*="background-color: yellow"],
+        #word-content [style*="mso-highlight:yellow"], #word-content [style*="mso-highlight: yellow"] {
+            background: transparent !important; background-color: transparent !important;
         }
-
-        #word-content [style*="color:red"],
-        #word-content [style*="color: red"],
-        #word-content [style*="color:#FF0000"],
-        #word-content [style*="color: #FF0000"],
-        #word-content font[color="red"],
-        #word-content font[color="#ff0000"] {
+        #word-content [style*="color:red"], #word-content [style*="color: red"],
+        #word-content [style*="color:#FF0000"], #word-content [style*="color: #FF0000"],
+        #word-content font[color="red"], #word-content font[color="#ff0000"] {
             color: inherit !important;
         }
 
-        /* Khung bọc nội dung file Word để tránh vỡ giao diện */
         #word-content {
-            background: white;
-            color: black;
-            padding: 2.5rem;
-            min-height: 60vh;
-            border-radius: 0.5rem;
-            overflow-x: auto;
+            background: white; color: black; padding: 2.5rem; min-height: 60vh;
+            border-radius: 0.5rem; overflow-x: auto;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        /* Tùy chỉnh khi bấm nút In (Ctrl+P) */
         @media print {
-            body {
-                background: white !important;
-            }
-            #header, #controls, #upload-area, #stats-panel {
-                display: none !important;
-            }
-            #word-content {
-                box-shadow: none !important;
-                padding: 0 !important;
-                border: none !important;
-            }
+            body { background: white !important; }
+            #header, #controls, #upload-area, #stats-panel { display: none !important; }
+            #word-content { box-shadow: none !important; padding: 0 !important; border: none !important; }
         }
 
-        /* --- GIAO DIỆN LỰA CHỌN TRẮC NGHIỆM TÙY CHỈNH --- */
+        /* --- GIAO DIỆN LỰA CHỌN --- */
         .clickable-option {
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s ease-in-out;
-            background-color: #f8fafc;
-            border: 2px solid #f1f5f9;
-            position: relative;
+            cursor: pointer; border-radius: 8px; transition: all 0.2s ease-in-out;
+            background-color: #f8fafc; border: 2px solid #f1f5f9; position: relative;
         }
-        .clickable-option:hover {
-            background-color: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-        }
+        .clickable-option:hover { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; }
         
         .user-selected {
-            background-color: #e0f2fe !important;
-            border-color: #38bdf8 !important;
+            background-color: #e0f2fe !important; border-color: #38bdf8 !important;
             box-shadow: inset 0 0 0 1px #38bdf8;
         }
         .user-selected, .user-selected span, .user-selected font {
-            color: #0369a1 !important; 
-            font-weight: bold !important;
+            color: #0369a1 !important; font-weight: bold !important;
         }
 
         .show-correct .word-split-option[data-is-correct="true"] {
-            background-color: #fef08a !important;
-            border-color: #facc15 !important;
-            color: #854d0e !important;
-            font-weight: 600 !important;
+            background-color: #fef08a !important; border-color: #facc15 !important;
+            color: #854d0e !important; font-weight: 600 !important;
             box-shadow: 0 4px 6px -1px rgba(250, 204, 21, 0.2);
         }
         .show-correct .word-split-option[data-is-correct="true"] span,
@@ -98,12 +63,12 @@
             <div class="flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-800">Công Cụ Trình Chiếu Đề Thi</h1>
+                    <h1 class="text-xl font-bold text-slate-800">Hệ Thống Bài Tập</h1>
                     <p id="interactive-hint" class="text-sm text-blue-600 hidden font-medium mt-1">💡 Mẹo: Nhấp chuột vào các đáp án để đánh dấu chọn.</p>
                 </div>
             </div>
             
-            <div id="controls" class="hidden flex items-center gap-2">
+            <div id="controls" class="hidden flex flex-wrap items-center gap-2">
                 <div id="stats-panel" class="hidden flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 mr-2 shadow-inner">
                     <div class="text-sm font-semibold text-slate-600 flex flex-col items-center">
                         <span class="text-xs text-slate-400 uppercase">Đã chọn</span>
@@ -127,15 +92,6 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     <span>Hiện Đáp Án</span>
                 </button>
-                
-                <button id="export-btn" class="flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700 px-3 py-2 rounded-lg font-semibold transition-colors shadow-md text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <span>Xuất Web (baitap.html)</span>
-                </button>
-
-                <button id="reload-btn" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors" title="Tải file khác">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                </button>
             </div>
         </div>
     </div>
@@ -145,11 +101,11 @@
             <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-3 pointer-events-none">Kéo thả file đề (.htm) vào đây</h2>
-            <p class="text-slate-500 mb-8 pointer-events-none">Hoặc bấm nút bên dưới để chọn file từ máy tính. Trang web sẽ tự động xử lý và dàn trang.</p>
+            <h2 class="text-2xl font-bold text-slate-800 mb-3 pointer-events-none">Giao Diện Dành Cho Giáo Viên</h2>
+            <p class="text-slate-500 mb-8 pointer-events-none">Kéo thả hoặc chọn file đề (.htm) để xem thử. Học sinh sẽ không thấy màn hình này nếu bạn gửi kèm link chứa tên file.</p>
             
             <label class="relative inline-flex items-center justify-center cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-md hover:shadow-lg">
-                <span>Chọn File Từ Máy Tính</span>
+                <span>Chọn File Kiểm Tra</span>
                 <input type="file" id="file-upload" accept=".htm, .html" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
             </label>
         </div>
@@ -161,188 +117,209 @@
 
     <script>
         const uploadArea = document.getElementById('upload-area');
-        
+        const contentDiv = document.getElementById('word-content');
+
+        // ====================================================================
+        // 1. CHẾ ĐỘ TỰ ĐỘNG ĐỌC ĐỀ QUA LINK URL (DÀNH CHO HỌC SINH)
+        // ====================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileName = urlParams.get('file');
+
+            if (fileName) {
+                // Đổi giao diện sang trạng thái loading
+                uploadArea.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-12">
+                        <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <h2 class="text-xl font-bold text-slate-800">Đang tự động tải đề thi...</h2>
+                        <p class="text-slate-500 mt-2">${fileName}</p>
+                    </div>
+                `;
+
+                // Trình duyệt tự động mò file trên server và load về
+                fetch(fileName)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Không tìm thấy file');
+                        return response.text();
+                    })
+                    .then(htmlContent => {
+                        processHTMLContent(htmlContent);
+                    })
+                    .catch(err => {
+                        uploadArea.innerHTML = `
+                            <div class="text-red-500 p-10 text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <h2 class="text-2xl font-bold mb-2">Lỗi tải đề!</h2>
+                                <p>Không thể tìm thấy file: <b>${fileName}</b></p>
+                                <p class="text-sm mt-2 text-slate-500">Đảm bảo bạn đã upload file này lên cùng thư mục với trang index trên GitHub.</p>
+                                <button onclick="window.location.href=window.location.pathname" class="mt-6 bg-slate-200 text-slate-800 px-4 py-2 rounded-lg hover:bg-slate-300 transition">Quay lại</button>
+                            </div>
+                        `;
+                    });
+            }
+        });
+
+
+        // ====================================================================
+        // 2. CHẾ ĐỘ KÉO THẢ (DÀNH CHO GIÁO VIÊN TEST THỬ)
+        // ====================================================================
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             uploadArea.addEventListener(eventName, preventDefaults, false);
             document.body.addEventListener(eventName, preventDefaults, false);
         });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
 
         ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => {
-                uploadArea.classList.add('border-blue-500', 'bg-blue-50');
-            }, false);
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('border-blue-500', 'bg-blue-50'), false);
         });
-
         ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => {
-                uploadArea.classList.remove('border-blue-500', 'bg-blue-50');
-            }, false);
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('border-blue-500', 'bg-blue-50'), false);
         });
-
         uploadArea.addEventListener('drop', (e) => {
-            let dt = e.dataTransfer;
-            let files = dt.files;
-            if (files.length > 0) processFile(files[0]);
+            if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
         }, false);
-
         document.getElementById('file-upload').addEventListener('change', function(e) {
             if (e.target.files.length > 0) processFile(e.target.files[0]);
         });
 
         function processFile(file) {
             const reader = new FileReader();
-            
-            // FIX LỖI FONT Ở ĐÂY: Đã đổi từ 'windows-1258' sang 'utf-8' 
-            // để hỗ trợ chuẩn file tiếng Việt có dấu.
             reader.onload = function(e) {
-                const htmlContent = e.target.result;
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlContent, 'text/html');
-
-                const oldStyles = document.querySelectorAll('.word-injected-style');
-                oldStyles.forEach(s => s.remove());
-
-                const styles = doc.querySelectorAll('style');
-                styles.forEach(style => {
-                    const newStyle = document.createElement('style');
-                    newStyle.textContent = style.textContent;
-                    newStyle.className = 'word-injected-style';
-                    document.head.appendChild(newStyle);
-                });
-
-                const contentDiv = document.getElementById('word-content');
-                contentDiv.innerHTML = doc.body.innerHTML;
-
-                // DỌN DẸP WORD
-                contentDiv.querySelectorAll('span[style*="mso-tab-count"]').forEach(el => el.remove());
-                contentDiv.querySelectorAll('o\\:p').forEach(el => el.remove());
-
-                contentDiv.querySelectorAll('span').forEach(span => {
-                    const styleStr = span.getAttribute('style') || '';
-                    const isImportant = /background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(styleStr) || /color\s*:\s*(red|#FF0000)/i.test(styleStr);
-                    if (!isImportant) {
-                        span.outerHTML = span.innerHTML; 
-                    }
-                });
-
-                const blocks = contentDiv.querySelectorAll('p, div, li, td');
-                blocks.forEach(block => {
-                    if (block.querySelector('p, div, ul, ol, table')) return;
-
-                    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
-                    const nodesToProcess = [];
-                    while(walker.nextNode()) nodesToProcess.push(walker.currentNode);
-
-                    nodesToProcess.forEach(node => {
-                        const text = node.nodeValue;
-                        const regex = /([A-D][\.\/\)](?:\s+|\u00A0+))/g;
-                        let match;
-                        let indices = [];
-                        while ((match = regex.exec(text)) !== null) {
-                            let prevChar = match.index > 0 ? text[match.index - 1] : '';
-                            if (!/[A-Z]/.test(prevChar)) {
-                                indices.push(match.index);
-                            }
-                        }
-                        if (indices.length > 0) {
-                            indices.reverse().forEach(index => {
-                                if (index > 0) node.splitText(index);
-                            });
-                        }
-                    });
-
-                    const children = Array.from(block.childNodes);
-                    let currentWrapper = null;
-
-                    children.forEach(node => {
-                        let text = node.textContent || "";
-                        const isOptionStart = /^\s*[A-D][\.\/\)](?:\s+|\u00A0+)/.test(text);
-
-                        if (isOptionStart) {
-                            currentWrapper = document.createElement('div');
-                            currentWrapper.className = 'word-split-option clickable-option w-full px-4 py-2.5 my-1.5';
-                            block.insertBefore(currentWrapper, node);
-                        }
-
-                        if (currentWrapper) {
-                            if (node.nodeType === Node.TEXT_NODE && currentWrapper.childNodes.length === 0) {
-                                node.nodeValue = node.nodeValue.trimStart();
-                                if (node.nodeValue === '') return; 
-                            }
-                            currentWrapper.appendChild(node);
-                        }
-                    });
-                });
-
-                let currentQuestionId = 0;
-                let totalQuestions = 0;
-
-                function checkIsCorrect(node) {
-                    if (/background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(node.innerHTML) || /color\s*:\s*(red|#FF0000)/i.test(node.innerHTML)) return true;
-                    let parent = node.parentElement;
-                    while (parent && parent !== contentDiv) {
-                        const styleStr = parent.getAttribute('style') || '';
-                        if (/background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(styleStr) || /color\s*:\s*(red|#FF0000)/i.test(styleStr)) return true;
-                        parent = parent.parentElement;
-                    }
-                    return false;
-                }
-
-                const optionElements = contentDiv.querySelectorAll('.word-split-option');
-                
-                optionElements.forEach(el => {
-                    const text = el.textContent.trim();
-                    const isOptionA = /^\s*A[\.\/\)]\s*/.test(text) || /^\s*A\s/.test(text);
-                    if (isOptionA) currentQuestionId++;
-                    if (currentQuestionId === 0) currentQuestionId = 1;
-
-                    el.dataset.qId = currentQuestionId;
-                    
-                    el.querySelectorAll('p').forEach(p => { p.style.margin = '0'; p.style.padding = '0'; });
-
-                    if (checkIsCorrect(el)) {
-                        el.dataset.isCorrect = "true";
-                    }
-                    
-                    el.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        const siblings = contentDiv.querySelectorAll(`.word-split-option[data-q-id="${this.dataset.qId}"]`);
-                        const wasSelected = this.classList.contains('user-selected');
-                        
-                        siblings.forEach(sib => sib.classList.remove('user-selected'));
-                        
-                        if (!wasSelected) {
-                            this.classList.add('user-selected');
-                        }
-                        updateStats();
-                    });
-                });
-
-                totalQuestions = currentQuestionId;
-                document.getElementById('stat-total').textContent = totalQuestions;
-
-                document.getElementById('interactive-hint').classList.remove('hidden');
-                document.getElementById('upload-area').classList.add('hidden');
-                document.getElementById('viewer-area').classList.remove('hidden');
-                document.getElementById('controls').classList.remove('hidden');
-                document.getElementById('controls').classList.add('flex');
-                document.getElementById('stats-panel').classList.remove('hidden');
+                processHTMLContent(e.target.result);
             };
-            
-            // BẢN SỬA LỖI: Chỉ định utf-8 thay cho windows-1258
             reader.readAsText(file, 'utf-8');
         }
 
+
+        // ====================================================================
+        // 3. HÀM CỐT LÕI: DÀN TRANG VÀ BIẾN ĐỀ THÀNH ỨNG DỤNG TRẮC NGHIỆM
+        // ====================================================================
+        function processHTMLContent(htmlContent) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+
+            document.querySelectorAll('.word-injected-style').forEach(s => s.remove());
+            doc.querySelectorAll('style').forEach(style => {
+                const newStyle = document.createElement('style');
+                newStyle.textContent = style.textContent;
+                newStyle.className = 'word-injected-style';
+                document.head.appendChild(newStyle);
+            });
+
+            contentDiv.innerHTML = doc.body.innerHTML;
+
+            // DỌN DẸP WORD
+            contentDiv.querySelectorAll('span[style*="mso-tab-count"]').forEach(el => el.remove());
+            contentDiv.querySelectorAll('o\\:p').forEach(el => el.remove());
+
+            contentDiv.querySelectorAll('span').forEach(span => {
+                const styleStr = span.getAttribute('style') || '';
+                const isImportant = /background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(styleStr) || /color\s*:\s*(red|#FF0000)/i.test(styleStr);
+                if (!isImportant) {
+                    span.outerHTML = span.innerHTML; 
+                }
+            });
+
+            // ÉP XUỐNG DÒNG
+            contentDiv.querySelectorAll('p, div, li, td').forEach(block => {
+                if (block.querySelector('p, div, ul, ol, table')) return;
+
+                const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
+                const nodesToProcess = [];
+                while(walker.nextNode()) nodesToProcess.push(walker.currentNode);
+
+                nodesToProcess.forEach(node => {
+                    const text = node.nodeValue;
+                    const regex = /([A-D][\.\/\)](?:\s+|\u00A0+))/g;
+                    let match;
+                    let indices = [];
+                    while ((match = regex.exec(text)) !== null) {
+                        let prevChar = match.index > 0 ? text[match.index - 1] : '';
+                        if (!/[A-Z]/.test(prevChar)) indices.push(match.index);
+                    }
+                    if (indices.length > 0) {
+                        indices.reverse().forEach(index => {
+                            if (index > 0) node.splitText(index);
+                        });
+                    }
+                });
+
+                const children = Array.from(block.childNodes);
+                let currentWrapper = null;
+
+                children.forEach(node => {
+                    let text = node.textContent || "";
+                    const isOptionStart = /^\s*[A-D][\.\/\)](?:\s+|\u00A0+)/.test(text);
+
+                    if (isOptionStart) {
+                        currentWrapper = document.createElement('div');
+                        currentWrapper.className = 'word-split-option clickable-option w-full px-4 py-2.5 my-1.5';
+                        block.insertBefore(currentWrapper, node);
+                    }
+
+                    if (currentWrapper) {
+                        if (node.nodeType === Node.TEXT_NODE && currentWrapper.childNodes.length === 0) {
+                            node.nodeValue = node.nodeValue.trimStart();
+                            if (node.nodeValue === '') return; 
+                        }
+                        currentWrapper.appendChild(node);
+                    }
+                });
+            });
+
+            // TÍNH ĐIỂM VÀ ĐÁNH DẤU
+            let currentQuestionId = 0;
+            let totalQuestions = 0;
+
+            function checkIsCorrect(node) {
+                if (/background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(node.innerHTML) || /color\s*:\s*(red|#FF0000)/i.test(node.innerHTML)) return true;
+                let parent = node.parentElement;
+                while (parent && parent !== contentDiv) {
+                    const styleStr = parent.getAttribute('style') || '';
+                    if (/background(-color)?\s*:\s*yellow|mso-highlight\s*:\s*yellow/i.test(styleStr) || /color\s*:\s*(red|#FF0000)/i.test(styleStr)) return true;
+                    parent = parent.parentElement;
+                }
+                return false;
+            }
+
+            contentDiv.querySelectorAll('.word-split-option').forEach(el => {
+                const text = el.textContent.trim();
+                const isOptionA = /^\s*A[\.\/\)]\s*/.test(text) || /^\s*A\s/.test(text);
+                if (isOptionA) currentQuestionId++;
+                if (currentQuestionId === 0) currentQuestionId = 1;
+
+                el.dataset.qId = currentQuestionId;
+                el.querySelectorAll('p').forEach(p => { p.style.margin = '0'; p.style.padding = '0'; });
+
+                if (checkIsCorrect(el)) el.dataset.isCorrect = "true";
+                
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const siblings = contentDiv.querySelectorAll(`.word-split-option[data-q-id="${this.dataset.qId}"]`);
+                    const wasSelected = this.classList.contains('user-selected');
+                    
+                    siblings.forEach(sib => sib.classList.remove('user-selected'));
+                    if (!wasSelected) this.classList.add('user-selected');
+                    updateStats();
+                });
+            });
+
+            // KÍCH HOẠT GIAO DIỆN
+            document.getElementById('stat-total').textContent = currentQuestionId;
+            document.getElementById('interactive-hint').classList.remove('hidden');
+            document.getElementById('upload-area').classList.add('hidden');
+            document.getElementById('viewer-area').classList.remove('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('controls').classList.add('flex');
+            document.getElementById('stats-panel').classList.remove('hidden');
+        }
+
+        // ====================================================================
+        // 4. CHẤM ĐIỂM VÀ HIỆN ĐÁP ÁN
+        // ====================================================================
         function updateStats() {
             const selectedOptions = document.querySelectorAll('.user-selected');
-            const answeredCount = selectedOptions.length;
-            
-            document.getElementById('stat-answered').textContent = answeredCount;
+            document.getElementById('stat-answered').textContent = selectedOptions.length;
             document.getElementById('score-result').classList.add('hidden');
             document.getElementById('score-result').classList.remove('flex');
         }
@@ -361,7 +338,6 @@
 
             document.getElementById('stat-answered-sub').textContent = selectedOptions.length;
             document.getElementById('stat-correct').textContent = correctCount;
-            
             const scoreResult = document.getElementById('score-result');
             scoreResult.classList.remove('hidden');
             scoreResult.classList.add('flex');
@@ -369,9 +345,7 @@
 
         let isAnswersHidden = true;
         document.getElementById('toggle-btn').addEventListener('click', function() {
-            const contentDiv = document.getElementById('word-content');
             const btnSpan = this.querySelector('span');
-            
             isAnswersHidden = !isAnswersHidden;
             
             if (isAnswersHidden) {
@@ -384,159 +358,6 @@
                 this.className = 'flex items-center gap-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-2 rounded-lg font-semibold transition-colors text-sm';
             }
         });
-
-        document.getElementById('reload-btn').addEventListener('click', function() {
-            window.location.reload();
-        });
-
-
-        // === XUẤT FILE baitap.html ===
-        document.getElementById('export-btn').addEventListener('click', function() {
-            const coreCSS = document.getElementById('core-css').innerHTML;
-            
-            let wordCSS = '';
-            document.querySelectorAll('.word-injected-style').forEach(s => {
-                wordCSS += s.innerHTML + '\n';
-            });
-
-            const processedContent = document.getElementById('word-content').innerHTML;
-            const totalQ = document.getElementById('stat-total').textContent;
-
-            const exportScriptCode = `
-                let isAnswersHidden = true;
-
-                const contentDiv = document.getElementById('word-content');
-                const optionElements = contentDiv.querySelectorAll('.word-split-option');
-                
-                optionElements.forEach(el => {
-                    el.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        const siblings = contentDiv.querySelectorAll('.word-split-option[data-q-id="' + this.dataset.qId + '"]');
-                        const wasSelected = this.classList.contains('user-selected');
-                        
-                        siblings.forEach(sib => sib.classList.remove('user-selected'));
-                        if (!wasSelected) {
-                            this.classList.add('user-selected');
-                        }
-                        updateStats();
-                    });
-                });
-
-                function updateStats() {
-                    const selectedOptions = document.querySelectorAll('.user-selected');
-                    document.getElementById('stat-answered').textContent = selectedOptions.length;
-                    document.getElementById('score-result').classList.add('hidden');
-                    document.getElementById('score-result').classList.remove('flex');
-                }
-
-                document.getElementById('score-btn').addEventListener('click', function() {
-                    const selectedOptions = document.querySelectorAll('.user-selected');
-                    if (selectedOptions.length === 0) {
-                        alert("Bạn chưa làm câu nào. Hãy chọn đáp án trước khi chấm điểm nhé!");
-                        return;
-                    }
-                    let correctCount = 0;
-                    selectedOptions.forEach(opt => {
-                        if (opt.dataset.isCorrect === "true") correctCount++;
-                    });
-                    document.getElementById('stat-answered-sub').textContent = selectedOptions.length;
-                    document.getElementById('stat-correct').textContent = correctCount;
-                    
-                    const scoreResult = document.getElementById('score-result');
-                    scoreResult.classList.remove('hidden');
-                    scoreResult.classList.add('flex');
-                });
-
-                document.getElementById('toggle-btn').addEventListener('click', function() {
-                    const btnSpan = this.querySelector('span');
-                    isAnswersHidden = !isAnswersHidden;
-                    
-                    if (isAnswersHidden) {
-                        contentDiv.classList.remove('show-correct');
-                        btnSpan.textContent = 'Hiện Đáp Án';
-                        this.className = 'flex items-center gap-2 bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm';
-                    } else {
-                        contentDiv.classList.add('show-correct');
-                        btnSpan.textContent = 'Ẩn Đáp Án';
-                        this.className = 'flex items-center gap-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm';
-                    }
-                });
-            `;
-
-            const exportedHTML = `<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bài Tập Trắc Nghiệm</title>
-    <script src="https://cdn.tailwindcss.com"><\/script>
-    <style>
-        ${coreCSS}
-        ${wordCSS}
-    </style>
-</head>
-<body class="bg-slate-100 min-h-screen font-sans text-slate-800 selection:bg-blue-200">
-    <div id="header" class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                <div>
-                    <h1 class="text-xl font-bold text-slate-800">Bài Tập Trắc Nghiệm</h1>
-                    <p class="text-sm text-blue-600 font-medium mt-1">💡 Mẹo: Nhấp chuột vào các đáp án để đánh dấu chọn.</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 shadow-inner">
-                    <div class="text-sm font-semibold text-slate-600 flex flex-col items-center">
-                        <span class="text-xs text-slate-400 uppercase">Đã chọn</span>
-                        <div><span id="stat-answered" class="text-blue-600 text-lg font-bold">0</span>/<span class="text-slate-500">${totalQ}</span></div>
-                    </div>
-                    <div id="score-result" class="hidden items-center gap-4">
-                        <div class="w-px h-8 bg-slate-200"></div>
-                        <div class="text-sm font-semibold text-slate-600 flex flex-col items-center">
-                            <span class="text-xs text-slate-400 uppercase">Làm đúng</span>
-                            <div><span id="stat-correct" class="text-green-600 text-lg font-bold">0</span>/<span id="stat-answered-sub" class="text-slate-500">0</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="score-btn" class="flex items-center gap-2 bg-green-100 text-green-700 hover:bg-green-200 px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <span>Chấm Điểm</span>
-                </button>
-                <button id="toggle-btn" class="flex items-center gap-2 bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span>Hiện Đáp Án</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="max-w-5xl mx-auto px-4 py-8">
-        <div id="word-content">${processedContent}</div>
-    </div>
-
-    <script>
-        ${exportScriptCode}
-    <\/script>
-</body>
-</html>`;
-
-            const blob = new Blob([exportedHTML], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'baitap.html';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 0);
-        });
     </script>
 </body>
 </html>
-
-
