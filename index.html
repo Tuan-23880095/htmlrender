@@ -92,6 +92,13 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     <span>Hiện Đáp Án</span>
                 </button>
+                
+                <!-- NÚT LẤY LINK MỚI -->
+                <button id="share-btn" class="flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700 px-3 py-2 rounded-lg font-semibold transition-colors shadow-md text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <span>Lấy Link Gửi Học Sinh</span>
+                </button>
+
             </div>
         </div>
     </div>
@@ -115,9 +122,42 @@
         </div>
     </div>
 
+    <!-- BẢNG HƯỚNG DẪN CHIA SẺ -->
+    <div id="share-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 animate-[pulse_0.2s_ease-in-out]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Link Gửi Cho Học Sinh
+                </h3>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-4">Để học sinh làm được đề này, bạn <b>BẮT BUỘC</b> phải thực hiện đủ 2 bước sau:</p>
+            
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <p class="font-bold text-orange-800 text-sm mb-1">Bước 1: Tải file đề lên kho GitHub của bạn</p>
+                <p class="text-sm text-orange-700">Hãy upload file có tên <code id="modal-filename" class="bg-white px-2 py-0.5 rounded text-red-600 font-bold border border-orange-100"></code> (và thư mục hình ảnh của nó) lên nằm chung chỗ với file <code class="font-semibold">index.html</code> trên GitHub.</p>
+            </div>
+
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <p class="font-bold text-green-800 text-sm mb-1">Bước 2: Copy link dưới đây gửi cho học sinh</p>
+                <div class="flex gap-2 mt-2">
+                    <input type="text" id="share-url-input" class="w-full p-2.5 border border-green-300 rounded-lg focus:outline-green-500 text-sm font-medium text-slate-700 bg-white" readonly>
+                </div>
+                <button id="copy-link-btn" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-bold transition flex justify-center items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    Copy Link
+                </button>
+            </div>
+
+            <button id="close-modal-btn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-lg font-semibold transition border border-slate-300">Đã hiểu và Đóng lại</button>
+        </div>
+    </div>
+
     <script>
         const uploadArea = document.getElementById('upload-area');
         const contentDiv = document.getElementById('word-content');
+        let currentLoadedFileName = ""; // Lưu tên file hiện tại
 
         // ====================================================================
         // 1. CHẾ ĐỘ TỰ ĐỘNG ĐỌC ĐỀ QUA LINK URL (DÀNH CHO HỌC SINH)
@@ -127,7 +167,9 @@
             const fileName = urlParams.get('file');
 
             if (fileName) {
-                // Đổi giao diện sang trạng thái loading
+                // Ẩn thanh công cụ nếu là chế độ xem bài của học sinh để tránh học sinh lấy link lung tung
+                document.getElementById('share-btn').style.display = 'none';
+
                 uploadArea.innerHTML = `
                     <div class="flex flex-col items-center justify-center p-12">
                         <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -136,7 +178,6 @@
                     </div>
                 `;
 
-                // Trình duyệt tự động mò file trên server và load về
                 fetch(fileName)
                     .then(response => {
                         if (!response.ok) throw new Error('Không tìm thấy file');
@@ -151,8 +192,15 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <h2 class="text-2xl font-bold mb-2">Lỗi tải đề!</h2>
                                 <p>Không thể tìm thấy file: <b>${fileName}</b></p>
-                                <p class="text-sm mt-2 text-slate-500">Đảm bảo bạn đã upload file này lên cùng thư mục với trang index trên GitHub.</p>
-                                <button onclick="window.location.href=window.location.pathname" class="mt-6 bg-slate-200 text-slate-800 px-4 py-2 rounded-lg hover:bg-slate-300 transition">Quay lại</button>
+                                <div class="bg-red-50 p-4 rounded-lg mt-4 text-left border border-red-200">
+                                    <p class="text-sm text-red-800 font-semibold mb-2">Giáo viên lưu ý:</p>
+                                    <ul class="text-sm text-red-700 list-disc list-inside">
+                                        <li>Bạn chưa upload file <b>${fileName}</b> lên GitHub.</li>
+                                        <li>Vui lòng upload file đó lên cùng vị trí với file index.html.</li>
+                                        <li>Hoặc kiểm tra xem tên file có chứa dấu cách hay ký tự đặc biệt làm hỏng link không.</li>
+                                    </ul>
+                                </div>
+                                <button onclick="window.location.href=window.location.pathname" class="mt-6 bg-slate-200 text-slate-800 px-6 py-2.5 rounded-lg hover:bg-slate-300 font-bold transition">Về Trang Xem Thử</button>
                             </div>
                         `;
                     });
@@ -176,10 +224,16 @@
             uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('border-blue-500', 'bg-blue-50'), false);
         });
         uploadArea.addEventListener('drop', (e) => {
-            if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files.length > 0) {
+                currentLoadedFileName = e.dataTransfer.files[0].name;
+                processFile(e.dataTransfer.files[0]);
+            }
         }, false);
         document.getElementById('file-upload').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) processFile(e.target.files[0]);
+            if (e.target.files.length > 0) {
+                currentLoadedFileName = e.target.files[0].name;
+                processFile(e.target.files[0]);
+            }
         });
 
         function processFile(file) {
@@ -358,6 +412,55 @@
                 this.className = 'flex items-center gap-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-2 rounded-lg font-semibold transition-colors text-sm';
             }
         });
+
+        // ====================================================================
+        // 5. CHỨC NĂNG LẤY LINK CHIA SẺ
+        // ====================================================================
+        document.getElementById('share-btn').addEventListener('click', function() {
+            if (!currentLoadedFileName) return;
+
+            // Cảnh báo nếu giáo viên đang mở file offline trên máy (chưa đẩy lên Github)
+            if (window.location.protocol === 'file:') {
+                alert('CHÚ Ý: Bạn đang mở trang web trên máy tính (chế độ offline). Bạn phải truy cập vào đường link GitHub Pages của bạn để tính năng tạo link chia sẻ hoạt động chính xác!');
+            }
+
+            // Lấy địa chỉ trang web gốc (bỏ đi các ký tự tham số cũ nếu có)
+            const baseUrl = window.location.href.split('?')[0];
+            
+            // Mã hóa tên file (ví dụ "11. LỰC.htm" thành "11.%20L%E1%BB%B0C.htm") để URL không bị lỗi
+            const shareUrl = `${baseUrl}?file=${encodeURIComponent(currentLoadedFileName)}`;
+
+            document.getElementById('modal-filename').textContent = currentLoadedFileName;
+            document.getElementById('share-url-input').value = shareUrl;
+            
+            // Hiện bảng modal
+            document.getElementById('share-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('copy-link-btn').addEventListener('click', function() {
+            const input = document.getElementById('share-url-input');
+            input.select();
+            input.setSelectionRange(0, 99999); // Cho mobile
+            document.execCommand('copy');
+            
+            // Hiệu ứng nút bấm
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Đã Copy Link!`;
+            btn.classList.replace('bg-green-600', 'bg-slate-600');
+            btn.classList.replace('hover:bg-green-700', 'hover:bg-slate-700');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.replace('bg-slate-600', 'bg-green-600');
+                btn.classList.replace('hover:bg-slate-700', 'hover:bg-green-700');
+            }, 2000);
+        });
+
+        document.getElementById('close-modal-btn').addEventListener('click', function() {
+            document.getElementById('share-modal').classList.add('hidden');
+        });
+
     </script>
 </body>
 </html>
